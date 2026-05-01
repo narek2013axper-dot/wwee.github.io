@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7 чудес света</title>
+    <style>
+        :root {
+            --bg-primary: #0b0b17;
+            --bg-card: #1a1a30;
+            --bg-card-hover: #1f1f3a;
+            --text-primary: #e8e8f0;
+            --text-secondary: #b0b0c0;
+            --gold: #d4a745;
+            --gold-light: #e8c867;
+            --gold-glow: rgba(212,167,69,0.5);
+            --border-subtle: rgba(255,255,255,0.06);
+            --border-hover: rgba(212,167,69,0.4);
+            --radius-card: 18px;
+            --shadow-card: 0 8px 32px rgba(0,0,0,0.4);
+            --shadow-hover: 0 24px 48px rgba(0,0,0,0.6), 0 0 40px var(--gold-glow);
+            --transition-smooth: 0.4s cubic-bezier(0.25,0.1,0.25,1);
+            --modal-overlay: rgba(0,0,0,0.8);
+            --modal-bg: #15152a;
+        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        html{scroll-behavior:smooth;font-size:16px}
+        body{
+            font-family:'Segoe UI','Inter',system-ui,sans-serif;
+            background: var(--bg-primary);
+            background-image:
+                radial-gradient(ellipse at 20% 20%, rgba(212,167,69,0.04) 0%, transparent 55%),
+                radial-gradient(ellipse at 75% 60%, rgba(180,140,60,0.03) 0%, transparent 55%),
+                radial-gradient(ellipse at 50% 90%, rgba(160,120,50,0.03) 0%, transparent 50%);
+            color: var(--text-primary);
+            min-height:100vh;
+            line-height:1.6;
+            -webkit-font-smoothing:antialiased;
+        }
+        .main-container{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:40px 24px 60px}
+        .header{text-align:center;margin-bottom:56px;animation:headerFadeIn 1s ease forwards}
+        @keyframes headerFadeIn{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+        .header__icon{display:inline-block;font-size:2.4rem;margin-bottom:8px;animation:iconPulse 3s ease-in-out infinite}
+        @keyframes iconPulse{0%,100%{transform:scale(1);opacity:0.8}50%{transform:scale(1.15);opacity:1}}
+        .header__title{
+            font-size:clamp(2rem,5vw,3.2rem);font-weight:800;letter-spacing:0.04em;
+            background:linear-gradient(180deg,#fff 0%,#d4a745 50%,#b8903a 100%);
+            -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px;
+        }
+        .header__subtitle{font-size:1.05rem;color:var(--text-secondary);font-weight:400;letter-spacing:0.06em;text-transform:uppercase;position:relative;display:inline-block}
+        .header__subtitle::after{content:'';position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);width:60px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);border-radius:1px}
+        .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:28px;align-items:start}
+        .card{
+            background:var(--bg-card);border-radius:var(--radius-card);overflow:hidden;
+            border:1px solid var(--border-subtle);box-shadow:var(--shadow-card);cursor:pointer;
+            opacity:0;transform:translateY(35px);
+            transition:opacity 0.7s ease,transform 0.7s ease,box-shadow var(--transition-smooth),border-color var(--transition-smooth),background var(--transition-smooth);
+            will-change:transform,opacity;
+        }
+        .card.visible{opacity:1;transform:translateY(0)}
+        .card:hover{transform:translateY(-12px) scale(1.03);box-shadow:var(--shadow-hover);border-color:var(--border-hover);background:var(--bg-card-hover);z-index:5}
+        .card__image-wrapper{position:relative;width:100%;height:220px;overflow:hidden;background:linear-gradient(135deg,#1a1a35,#252545);display:flex;align-items:center;justify-content:center}
+        .card__image-wrapper::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 60%,rgba(26,26,48,0.35) 85%,rgba(26,26,48,0.9) 100%);z-index:1;pointer-events:none;transition:opacity var(--transition-smooth)}
+        .card:hover .card__image-wrapper::after{opacity:0.7}
+        .card__image{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.7s cubic-bezier(0.25,0.1,0.25,1);position:relative;z-index:0}
+        .card:hover .card__image{transform:scale(1.08)}
+        .card__placeholder{display:none;flex-direction:column;align-items:center;justify-content:center;position:absolute;inset:0;z-index:0;color:var(--gold-light);opacity:0.6;background:linear-gradient(135deg,#1a1a35,#252545)}
+        .card__placeholder svg{width:48px;height:48px;margin-bottom:8px;fill:currentColor}
+        .card__placeholder span{font-size:0.9rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em}
+        .card__content{padding:20px 22px 26px;position:relative;z-index:2}
+        .card__title{font-size:1.3rem;font-weight:700;color:var(--gold-light);margin-bottom:8px}
+        .card__description{font-size:0.92rem;color:var(--text-secondary);line-height:1.55}
+        .card__number{position:absolute;top:16px;right:20px;font-size:3.5rem;font-weight:900;color:rgba(212,167,69,0.12);z-index:0;pointer-events:none;line-height:1;transition:color var(--transition-smooth)}
+        .card:hover .card__number{color:rgba(212,167,69,0.22)}
+        /* модальное окно */
+        .modal{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);background-color:rgba(0,0,0,0.6);transition:opacity 0.3s ease}
+        .modal--open{display:flex}
+        .modal__overlay{position:absolute;inset:0;background:var(--modal-overlay);opacity:0;transition:opacity 0.35s ease;z-index:0}
+        .modal--open .modal__overlay{opacity:1}
+        .modal__container{position:relative;z-index:1;width:100%;max-width:900px;max-height:90vh;background:var(--modal-bg);border-radius:24px;overflow-y:auto;box-shadow:0 30px 70px rgba(0,0,0,0.7),0 0 0 1px rgba(212,167,69,0.2);display:flex;flex-direction:column;transform:scale(0.9) translateY(20px);opacity:0;transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1),opacity 0.3s ease}
+        .modal--open .modal__container{transform:scale(1) translateY(0);opacity:1}
+        .modal__close{position:absolute;top:16px;right:20px;z-index:10;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:2rem;line-height:1;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(6px);transition:background 0.2s,border-color 0.2s,transform 0.2s;padding:0}
+        .modal__close:hover{background:rgba(212,167,69,0.3);border-color:var(--gold);transform:rotate(90deg)}
+        .modal__image-wrapper{width:100%;max-height:50vh;overflow:hidden;border-radius:24px 24px 0 0;flex-shrink:0;background:#0f0f1f;display:flex;align-items:center;justify-content:center}
+        .modal__image{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.6s ease}
+        .modal__container:hover .modal__image{transform:scale(1.02)}
+        .modal__content{padding:28px 30px 35px;color:var(--text-primary)}
+        .modal__title{font-size:2rem;font-weight:800;color:var(--gold-light);margin-bottom:16px}
+        .modal__description{font-size:1.05rem;line-height:1.7;color:var(--text-secondary);max-width:700px}
+        @media(max-width:640px){
+            .cards-grid{grid-template-columns:1fr;gap:18px}
+            .card__image-wrapper{height:200px}
+            .card__content{padding:14px 16px 20px}
+            .card__title{font-size:1.2rem}
+            .card__number{font-size:2.8rem;top:10px;right:14px}
+            .header__title{font-size:1.7rem}
+            .modal{padding:12px}
+            .modal__container{max-height:95vh;border-radius:20px}
+            .modal__content{padding:20px 18px 25px}
+            .modal__title{font-size:1.5rem}
+        }
+    </style>
+</head>
+<body>
+<div class="main-container">
+    <header class="header">
+        <div class="header__icon" aria-hidden="true">🌍</div>
+        <h1 class="header__title">7 чудес света</h1>
+        <p class="header__subtitle">Новые чудеса — наследие человечества</p>
+    </header>
+
+    <div class="cards-grid" id="cardsGrid">
+        <!-- 1 Великая Китайская стена -->
+        <article class="card" data-index="0">
+            <div class="card__image-wrapper">
+                <span class="card__number" aria-hidden="true">01</span>
+                <img class="card__image" src="https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=800&h=500&fit=crop&auto=format" alt="Великая Китайская стена" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                <div class="card__placeholder"><svg viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2z"/></svg><span>Великая стена</span></div>
+            </div>
+            <div class="card__content">
+                <h2 class="card__title">Великая Китайская стена</h2>
+                <p class="card__description">Грандиозное оборонительное сооружение длиной более 21 000 км, строившееся веками для защиты от кочевников.</p>
+            </div>
+        </article>
+
+        <!-- 2 Петра (ссылка пользователя) -->
+        <article class="card" data-index="1">
+            <div class="card__image-wrapper">
+                <span class="card__number" aria-hidden="true">02</span>
+                <img class="card__image" src="https://ic.pics.livejournal.com/sp_off/14038067/1483254/1483254_original.jpg" alt="Петра" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                <div class="card__placeholder"><svg viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2z"/></svg><span>Петра</span></div>
+            </div>
+            <div class="card__content">
+                <h2 class="card__title">Петра</h2>
+                <p class="card__description">Древний город, высеченный в розовых скалах Иордании, знаменитый своими храмами и гробницами.</p>
+            </div>
+        </article>
+
+        <!-- 3 Колизей -->
+        <article class="card" data-index="2">
+            <div class="card__image-wrapper">
+                <span class="card__number" aria-hidden="true">03</span>
+                <img class="card__image" src="https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&h=500&fit=crop&auto=format" alt="Колизей" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                <div class="card__placeholder"><svg viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2z"/></svg><span>Колизей</span></div>
+            </div>
+            <div class="card__content">
+                <h2 class="card__title">Колизей</h2>
+                <p class="card__description">Амфитеатр в Риме, вмещавший до 50 000 зрителей, символ античной эпохи.</p>
+            </div>
+        </article>
+
+        <!-- 4 Чичен-Ица -->
+        <article class="card" data-index="3">
+            <div class="card__image-wrapper">
+                <span class="card__number" aria-hidden="true">04</span>
+                <img class="card__image" src="https://images.unsplash.com/photo-1518638150340-f706e86654de?w=800&h=500&fit=crop&auto=format" alt="Чичен-Ица" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                <div class="card__placeholder"><svg viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2z"/></svg><span>Чичен-Ица</span></div>
+            </div>
+            <div class="card__content">
+                <h2 class="card__title">Чичен-Ица</h2>
+                <p class="card__description">Древний город майя с пирамидой Кукулькана, отражающей астрономические знания цивилизации.</p>
+            </div>
+        </article>
+
+        <!-- 5 Мачу-Пикчу -->
+        <article class="card" data-index="4">
+            <div class="card__image-wrapper">
+                <span class="card__number" aria-hidden="true">05</span>
+                <img class="card__image" src="https://images.unsplash.com/photo-1587595431973-160d0d94add1?w=800&h=500&fit=crop&auto=format" alt="Мачу-Пикчу" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                <div class="card__placeholder"><svg viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2z"/></svg><span>Мачу-Пикчу</span></div>
+            </div>
+            <div class="card__content">
+                <h2 class="card__title">Мачу-Пикчу</h2>
+                <p class="card__description">Затерянный город инков в Андах, гармонично вписанный в горный ландшафт.</p>
+            </div>
+        </article>
+
+        <!-- 6 Тадж-Махал -->
+        <article class="card" data-index="5">
+            <div class="card__image-wrapper">
+                <span class="card__number" aria-hidden="true">06</span>
+                <img class="card__image" src="https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800&h=500&fit=crop&auto=format" alt="Тадж-Махал" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                <div class="card__placeholder"><svg viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2z"/></svg><span>Тадж-Махал</span></div>
+            </div>
+            <div class="card__content">
+                <h2 class="card__title">Тадж-Махал</h2>
+                <p class="card__description">Мавзолей-мечеть в Индии, построенный в память о любимой жене, символ вечной любви.</p>
+            </div>
+        </article>
+
+        <!-- 7 Христос-Искупитель -->
+        <article class="card" data-index="6">
+            <div class="card__image-wrapper">
+                <span class="card__number" aria-hidden="true">07</span>
+                <img class="card__image" src="https://images.unsplash.com/photo-1580137189272-c9379f8864fd?w=800&h=500&fit=crop&auto=format" alt="Христос-Искупитель" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                <div class="card__placeholder"><svg viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2z"/></svg><span>Христос</span></div>
+            </div>
+            <div class="card__content">
+                <h2 class="card__title">Христос-Искупитель</h2>
+                <p class="card__description">Гигантская статуя Христа на горе Корковаду в Рио-де-Жанейро, символ мира и веры.</p>
+            </div>
+        </article>
+    </div>
+
+    <footer style="text-align:center;margin-top:60px;color:var(--text-secondary);opacity:0.7;">
+        <p>Новые <span style="color:var(--gold-light);">7 чудес света</span> — выбраны в 2007 году по итогам всемирного голосования</p>
+    </footer>
+</div>
+
+<!-- Модальное окно -->
+<div class="modal" id="modal" aria-hidden="true">
+    <div class="modal__overlay"></div>
+    <div class="modal__container">
+        <button class="modal__close" id="modalClose" aria-label="Закрыть">&times;</button>
+        <div class="modal__image-wrapper">
+            <img class="modal__image" id="modalImage" src="" alt="">
+        </div>
+        <div class="modal__content">
+            <h2 class="modal__title" id="modalTitle"></h2>
+            <p class="modal__description" id="modalDescription"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+(function(){
+    const wondersData = [
+        {
+            title:'Великая Китайская стена',
+            fullDesc:'Великая Китайская стена — крупнейший памятник архитектуры длиной свыше 21 000 км. Её строительство началось в III веке до н.э. для защиты от набегов кочевых племён и продолжалось на протяжении почти двух тысячелетий. Стена проходит через горы, пустыни и равнины, а её ширина позволяет в некоторых местах проехать пяти всадникам в ряд. Она построена из камня, кирпича, утрамбованной земли и дерева. Вдоль стены расположены сторожевые башни, казармы и сигнальные вышки. Сегодня это символ Китая и объект Всемирного наследия ЮНЕСКО.',
+            image:'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=800&h=500&fit=crop&auto=format'
+        },
+        {
+            title:'Петра',
+            fullDesc:'Петра — уникальный археологический комплекс на юге Иордании, столица Набатейского царства. Город полностью высечен в скалах из розового песчаника около II века до н.э. Самое известное сооружение — Эль-Хазне («Сокровищница»), величественный мавзолей высотой 40 метров с изящным фасадом, украшенным колоннами и скульптурами. Петра славится сложной системой водоснабжения: каналы и резервуары собирали дождевую воду. Здесь также находятся сотни гробниц, храмов и амфитеатр на 4000 зрителей. Город был важным торговым узлом на перекрёстке караванных путей. Сегодня Петра — одно из новых семи чудес света и символ Иордании.',
+            image:'https://ic.pics.livejournal.com/sp_off/14038067/1483254/1483254_original.jpg'
+        },
+        {
+            title:'Колизей',
+            fullDesc:'Колизей (Амфитеатр Флавиев) — крупнейший амфитеатр Древнего Рима, построенный в I веке н.э. императорами Веспасианом и Титом. Он вмещал от 50 000 до 80 000 зрителей и использовался для гладиаторских боёв, морских сражений (навмахий), казней и мифологических представлений. Инженерное чудо своего времени: под ареной находилась сложная система подземных помещений (гипогей), где содержались гладиаторы и звери. Внешнее кольцо достигало 48 метров в высоту. Несмотря на повреждения от землетрясений и разграбления, Колизей остаётся самым узнаваемым символом Рима.',
+            image:'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&h=500&fit=crop&auto=format'
+        },
+        {
+            title:'Чичен-Ица',
+            fullDesc:'Чичен-Ица — священный город цивилизации майя на полуострове Юкатан в Мексике. Его главная достопримечательность — пирамида Кукулькана (Эль-Кастильо), построенная с поразительной астрономической точностью: в дни весеннего и осеннего равноденствия тень на ступенях создаёт иллюзию ползущей змеи. Пирамида имеет 365 ступеней — по числу дней в году. В комплекс также входят обсерватория Эль-Караколь, стадион для игры в мяч (самый большой в Месоамерике) и Храм Воинов. Город процветал в IX–XII веках, а затем был заброшен. Сегодня это объект Всемирного наследия и одно из самых посещаемых археологических мест Мексики.',
+            image:'https://images.unsplash.com/photo-1518638150340-f706e86654de?w=800&h=500&fit=crop&auto=format'
+        },
+        {
+            title:'Мачу-Пикчу',
+            fullDesc:'Мачу-Пикчу — скрытый в облаках город инков, построенный в XV веке на высоте 2430 метров в Перуанских Андах. Он был покинут жителями во время испанского завоевания и оставался неизвестным миру до 1911 года, когда его обнаружил американский исследователь Хайрам Бингем. Город поражает идеальной каменной кладкой без раствора: гигантские блоки подогнаны с точностью до миллиметра. Архитектура включает террасы для земледелия, храмы, жилые кварталы и астрономическую обсерваторию. Мачу-Пикчу гармонично вписан в окружающий ландшафт и считается вершиной инженерного искусства инков. Ежегодно его посещают около 1,5 миллиона туристов.',
+            image:'https://images.unsplash.com/photo-1587595431973-160d0d94add1?w=800&h=500&fit=crop&auto=format'
+        },
+        {
+            title:'Тадж-Махал',
+            fullDesc:'Тадж-Махал — беломраморный мавзолей, возведённый императором Шах-Джаханом в XVII веке в память о его жене Мумтаз-Махал. Расположенный в Агре (Индия), он считается вершиной могольской архитектуры и сочетает элементы исламского, персидского и индийского стилей. Стены инкрустированы драгоценными и полудрагоценными камнями: бирюзой, малахитом, сердоликом. При смене освещения мрамор меняет оттенок от розоватого на рассвете до золотистого днём и серебристого в лунном свете. В комплекс также входят сады, мечеть и гостевой дом. Тадж-Махал — живой символ вечной любви и объект Всемирного наследия ЮНЕСКО.',
+            image:'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800&h=500&fit=crop&auto=format'
+        },
+        {
+            title:'Христос-Искупитель',
+            fullDesc:'Статуя Христа-Искупителя — 38-метровый монумент (включая 8-метровый пьедестал), установленный на вершине горы Корковаду (710 м) в Рио-де-Жанейро. Строительство длилось с 1922 по 1931 год. Размах рук статуи составляет 28 метров, она выполнена из железобетона и облицована мыльным камнем (талькохлоритом), устойчивым к погодным условиям. Статуя стала символом не только Рио-де-Жанейро, но и всего христианского мира. В 2006 году на 75-летие статуи была освящена капелла у её подножия. Ежегодно к подножию поднимаются около 2 миллионов человек. Это одна из самых узнаваемых скульптур в мире.',
+            image:'https://images.unsplash.com/photo-1580137189272-c9379f8864fd?w=800&h=500&fit=crop&auto=format'
+        }
+    ];
+
+    const cards = document.querySelectorAll('.card');
+    if('IntersectionObserver' in window){
+        const observer = new IntersectionObserver((entries, obs) => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting){
+                    const card = entry.target;
+                    const index = parseInt(card.dataset.index,10);
+                    setTimeout(() => card.classList.add('visible'), index*80);
+                    obs.unobserve(card);
+                }
+            });
+        }, {threshold:0.15, rootMargin:'30px 0px'});
+        cards.forEach(card => observer.observe(card));
+        setTimeout(() => {
+            cards.forEach((card,i) => { if(!card.classList.contains('visible')) setTimeout(() => card.classList.add('visible'), i*80); });
+        },1500);
+    } else {
+        cards.forEach((card,i) => setTimeout(() => card.classList.add('visible'), i*80));
+    }
+
+    const modal = document.getElementById('modal');
+    const modalClose = document.getElementById('modalClose');
+    const modalOverlay = modal.querySelector('.modal__overlay');
+    const modalImage = document.getElementById('modalImage');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalDescription = document.getElementById('modalDescription');
+
+    function openModal(index){
+        if(index<0 || index>=wondersData.length) return;
+        const w = wondersData[index];
+        modalImage.src = w.image;
+        modalImage.alt = w.title;
+        modalTitle.textContent = w.title;
+        modalDescription.textContent = w.fullDesc;
+        modal.setAttribute('aria-hidden','false');
+        modal.classList.add('modal--open');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeModal(){
+        modal.classList.remove('modal--open');
+        modal.setAttribute('aria-hidden','true');
+        document.body.style.overflow = '';
+    }
+
+    cards.forEach(card => {
+        card.addEventListener('click', () => {
+            const index = parseInt(card.dataset.index,10);
+            openModal(index);
+        });
+    });
+
+    modalClose.addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', closeModal);
+    window.addEventListener('keydown', e => { if(e.key==='Escape' && modal.classList.contains('modal--open')) closeModal(); });
+    modal.querySelector('.modal__container').addEventListener('click', e => e.stopPropagation());
+})();
+</script>
+</body>
+</html>
